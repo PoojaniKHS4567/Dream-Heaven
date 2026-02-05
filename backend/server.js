@@ -12,6 +12,7 @@ const cancellationRoutes = require("./Routes/cancellationRoute"); // ✅ match f
 const refundRoutes = require("./Routes/refundRoute");
 const userRoutes = require("./Routes/userRoute");
 const feedbackRoutes = require("./Routes/feedbackRoute");
+const contactRoutes = require("./Routes/contactRoutes");
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -23,6 +24,7 @@ app.use("/api/cancellations", cancellationRoutes); // ✅ make sure this is plur
 app.use("/api/refunds", refundRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/contactus", contactRoutes);
 
 // Start Server
 const port = process.env.PORT || 5000;

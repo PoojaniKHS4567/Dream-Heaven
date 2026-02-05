@@ -31,22 +31,24 @@ function Profile() {
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData) navigate("/login");
+    if (!userData) {
+      navigate("/login");
+      return;
+    }
 
     setUser(userData);
-    setPreviewUrl(userData.profilePhoto || "/default-profile.jpg");
+    setPreviewUrl(userData.profilePhoto || profileImg);
 
-    // Prefill form
     setEditForm({
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      username: userData.username,
-      email: userData.email,
-      contactNo: userData.contactNo,
+      firstName: userData.firstName || "",
+      lastName: userData.lastName || "",
+      username: userData.username || "",
+      email: userData.email || "",
+      contactNo: userData.contactNo || "",
     });
 
     setLoading(false);
-  }, []);
+  }, [navigate]);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -95,6 +97,7 @@ function Profile() {
       };
 
       setUser(updatedUser);
+      setPreviewUrl(response.data.profilePhoto);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       // ✅ Dispatch a custom event so Navbar can update
@@ -197,7 +200,6 @@ function Profile() {
   };
 
   // DELETE ACCOUNT
-  // DELETE ACCOUNT
   const deleteAccount = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -241,7 +243,11 @@ function Profile() {
             <img src={previewUrl} alt="Profile" className="profile-avatar" />
 
             <div className="photo-upload-area">
-              <input type="file" accept="image/*" onChange={handleFileSelect} />
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/jpg"
+                onChange={handleFileSelect}
+              />
 
               {selectedFile && (
                 <button onClick={uploadProfilePhoto}>Upload</button>
