@@ -7,6 +7,7 @@ function ContactUs() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    contactNo: "",
     message: "",
   });
 
@@ -40,6 +41,13 @@ function ContactUs() {
       });
       return;
     }
+
+    if (!formData.contactNo.trim()) {
+      toast.warn("Please enter your contact number", {
+        style: { background: "#ebdfccff", color: "#121212ff" },
+      });
+      return;
+    }
     if (!formData.message.trim()) {
       toast.warn("Please write your message before sending", {
         style: { background: "#ebdfccff", color: "#121212ff" },
@@ -50,7 +58,7 @@ function ContactUs() {
     try {
       // ✅ Send data to backend
       const res = await axios.post(
-        "http://localhost:5000/api/contactus/send",
+        "http://localhost:5000/api/contact/send",
         formData,
       );
 
@@ -212,6 +220,7 @@ function ContactUs() {
                     value={formData.name}
                     onChange={handleChange}
                     style={{ border: "1px solid #ccc" }}
+                    placeholder="e.g.: John Perera"
                   />
                 </div>
 
@@ -224,6 +233,20 @@ function ContactUs() {
                     value={formData.email}
                     onChange={handleChange}
                     style={{ border: "1px solid #ccc" }}
+                    placeholder="e.g.: example@gmail.com"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label">Contact Number</label>
+                  <input
+                    type="text"
+                    name="contactNo"
+                    className="form-control"
+                    value={formData.contactNo}
+                    onChange={handleChange}
+                    style={{ border: "1px solid #ccc" }}
+                    placeholder="e.g.: 0771234567"
                   />
                 </div>
 

@@ -1,69 +1,81 @@
 const mongoose = require("mongoose");
 
-const roomSchema = mongoose.Schema({
-
-    name:{
-        type:String,
-        required:true
+const roomSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
     roomType: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     location: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     occupancy: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true,
     },
     bedOptions: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     bathrooms: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     amenities: {
-        type: [String],
-        required: true
+      type: [String],
+      required: true,
     },
     facilities: {
-        type: [String],
-        required: true
+      type: [String],
+      required: true,
     },
     size: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true,
     },
     view: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     mealOptions: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     policies: {
-        type: [String],
-        required: true
+      type: [String],
+      required: true,
     },
-    imageurls:[],
-    currentbookings:[],
+    imageurls: {
+      type: [String],
+      default: [],
+    },
+    imagePublicIds: {
+      type: [String],
+      default: [],
+    },
+    currentbookings: {
+      type: [Object],
+      default: [],
+    },
     pricepernight: {
-        type: Number,
-        required: true
-    }
-},  {
-        timestamps:true,
-})
+      type: Number,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-const roomModel = mongoose.model("rooms",roomSchema)
+const roomModel = mongoose.model("rooms", roomSchema);
 
-module.exports = roomModel
+module.exports = roomModel;

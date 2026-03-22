@@ -1,23 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const Contact = require("../Models/contact");
+const auth = require("../middleware/auth");
 
-// Send Contact Message
-router.post("/send", async (req, res) => {
-  const { name, email, message } = req.body;
+const {
+  sendMessage,
+  getAllMessages,
+  deleteMessage,
+  updateReadStatus,
+} = require("../Controllers/contactController");
+const adminOnly = require("../middleware/adminOnly");
 
-  if (!name || !email || !message) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
-  try {
-    const newMessage = new Contact({ name, email, message });
-    await newMessage.save();
-
-    res.status(201).json({ message: "Message sent successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
+router.post("/send", sendMessage);
+router.get("/all", auth, adminOnly, getAllMessages);
+router.delete("/delete/:id", auth, adminOnly, deleteMessage);
+router.put("/update-read/:id", auth, adminOnly, updateReadStatus);
 
 module.exports = router;

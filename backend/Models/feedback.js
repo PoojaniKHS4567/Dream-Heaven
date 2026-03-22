@@ -7,7 +7,7 @@ const feedbackSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    firstName: {
+    name: {
       type: String,
       required: true,
     },

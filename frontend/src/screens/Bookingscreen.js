@@ -1,15 +1,20 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import moment from "moment";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Payment from "../screens/Payment";
 
 function Bookingscreen() {
   const { roomid, checkindate, checkoutdate } = useParams();
+  const navigate = useNavigate();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -18,8 +23,6 @@ function Bookingscreen() {
         const response = await axios.post(
           `http://localhost:5000/api/rooms/getroombyid/${roomid}`,
         );
-
-        console.log("Room Data:", response.data);
         setRoom(response.data);
       } catch (err) {
         setError(true);
@@ -31,17 +34,17 @@ function Bookingscreen() {
     fetchRoom();
   }, [roomid]);
 
-  // Convert URL parameters back to moment objects
   const checkInDate = moment(checkindate, "DD-MM-YYYY");
   const checkOutDate = moment(checkoutdate, "DD-MM-YYYY");
   const totalDays = checkOutDate.diff(checkInDate, "days");
+  const totalAmount = totalDays * (room?.pricepernight || 0);
 
-  async function bookRoom() {
+  const proceedToPayment = () => {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
       toast.error("You must be logged in to book.");
-      window.location.href = "/login";
+      navigate("/login");
       return;
     }
 
@@ -50,13 +53,11 @@ function Bookingscreen() {
       return;
     }
 
-    const totalAmount = totalDays * room.pricepernight;
-
-    const bookingDetails = {
+    const bookingData = {
       room,
       userid: user.id,
-      firstName: user.firstName, // Send separately
-      lastName: user.lastName, // Send separately
+      firstName: user.firstName,
+      lastName: user.lastName,
       user: `${user.firstName} ${user.lastName}`,
       checkindate: checkInDate.toISOString(),
       checkoutdate: checkOutDate.toISOString(),
@@ -64,31 +65,61 @@ function Bookingscreen() {
       totaldays: totalDays,
     };
 
+    setBookingDetails(bookingData);
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = async (paymentIntent, paymentData) => {
     try {
-      const result = await axios.post(
-        "http://localhost:5000/api/bookings/bookroom",
-        bookingDetails,
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "http://localhost:5000/api/payments/confirm-booking-payment",
+        {
+          paymentIntentId: paymentIntent.id,
+          bookingDetails: bookingDetails,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
 
-      toast.success("Successfully confirmed booking");
+      if (response.data.success) {
+        setPaymentSuccess(true);
+        setShowPayment(false);
+        toast.success(response.data.message);
+        setTimeout(() => {
+          navigate("/bookings");
+        }, 2000);
+      } else {
+        toast.error(response.data.message);
+      }
     } catch (error) {
-      toast.error(
-        "Booking confirmation failed. " +
-          (error.response?.data.error || "Please try again."),
-      );
+      toast.error("Payment confirmation failed");
     }
+  };
+
+  const handlePaymentError = (error) => {
+    toast.error("Payment failed: " + error);
+    setShowPayment(false);
+  };
+
+  if (paymentSuccess) {
+    return (
+      <div className="container mt-5 text-center">
+        <h2 className="text-success">✓ Payment Successful!</h2>
+        <p>Your booking has been confirmed.</p>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate("/bookings")}
+        >
+          View My Bookings
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div
-      style={{
-        backgroundColor: "#f0f8ff", // Light background color
-        minHeight: "100vh", // Full height of the viewport
-        display: "flex",
-        flexDirection: "column", // Ensure the layout stretches to the full height
-        justifyContent: "space-between", // Make the content stretch and align at top and bottom
-      }}
-    >
+    <div style={{ backgroundColor: "#f0f8ff", minHeight: "100vh" }}>
       <ToastContainer position="top-center" />
 
       {loading ? (
@@ -98,11 +129,7 @@ function Bookingscreen() {
       ) : room ? (
         <div
           className="container"
-          style={{
-            width: "80%",
-            maxWidth: "800px", // Smaller box size
-            padding: "80px",
-          }}
+          style={{ width: "80%", maxWidth: "800px", padding: "80px" }}
         >
           <div className="row justify-content-center mt-5 bs">
             <div className="col-md-6">
@@ -139,23 +166,25 @@ function Bookingscreen() {
                 {checkOutDate.format("DD-MM-YYYY")}
               </p>
               <br />
-              <br />
               <h1>Amount</h1>
               <hr />
               <p>
                 <strong>Total Days:</strong> {totalDays}
               </p>
               <p>
-                <strong>Price per Night: $</strong> {room.pricepernight}
+                <strong>Price per Night:</strong> ${room.pricepernight}
               </p>
               <p>
-                <strong>Total Price:$</strong> {totalDays * room.pricepernight}
+                <strong>Total Price:</strong> ${totalAmount}
               </p>
             </div>
 
             <div>
-              <button className="btn btn-primary" onClick={bookRoom}>
-                Confirm and Pay
+              <button
+                className="btn btn-primary btn-lg"
+                onClick={proceedToPayment}
+              >
+                Pay Now
               </button>
             </div>
           </div>
@@ -163,6 +192,16 @@ function Bookingscreen() {
       ) : (
         <h1>No room data available</h1>
       )}
+
+      <Payment
+        amount={totalAmount}
+        paymentType="booking"
+        bookingDetails={bookingDetails}
+        isOpen={showPayment}
+        onSuccess={handlePaymentSuccess}
+        onError={handlePaymentError}
+        onClose={() => setShowPayment(false)}
+      />
     </div>
   );
 }

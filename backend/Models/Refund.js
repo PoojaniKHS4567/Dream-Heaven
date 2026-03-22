@@ -5,22 +5,22 @@ const refundSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  user:{
+  user: {
     type: String,
-    required: true
+    required: true,
   },
-  userid:{
+  userid: {
     type: String,
-    required: true
+    required: true,
   },
   room: {
     type: String,
-    required: true
+    required: true,
   },
-  bookingid: { 
+  bookingid: {
     type: String,
-    required: true
- },
+    required: true,
+  },
   cancelApprovedDate: {
     type: Date,
     required: true,
@@ -31,7 +31,7 @@ const refundSchema = new mongoose.Schema({
   },
   refundDate: {
     type: Date,
-    required: true,
+    required: false, // Only set when payment is done
   },
   bankName: {
     type: String,
@@ -51,8 +51,13 @@ const refundSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'done'],
-    default: 'pending',
+    enum: ["pending", "done"],
+    default: "pending",
+  },
+  payment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Payment",
+    required: false,
   },
 });
 

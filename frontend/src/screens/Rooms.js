@@ -8,7 +8,7 @@ import Webfooter from "../components/Webfooter";
 
 dayjs.extend(isSameOrAfter);
 
-function Homescreen() {
+function Rooms() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -258,4 +258,4 @@ function Homescreen() {
   );
 }
 
-export default Homescreen;
+export default Rooms;

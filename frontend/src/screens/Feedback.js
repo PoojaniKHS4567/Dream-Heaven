@@ -67,7 +67,7 @@ function Feedback() {
         "/api/feedback/submit",
         {
           userId: user._id,
-          firstName: user.firstName,
+          name: `${user.firstName} ${user.lastName}`,
           userEmail: user.email,
           rating,
           category,
@@ -118,7 +118,9 @@ function Feedback() {
             alt="User"
             className="user-avatar"
           />
-          <p className="username">{user.firstName}</p>
+          <p className="username">
+            {user.firstName} {user.lastName}
+          </p>
         </div>
 
         {/* RIGHT */}

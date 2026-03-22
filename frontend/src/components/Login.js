@@ -5,34 +5,21 @@ import { toast } from "react-toastify";
 
 function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
-  const [disabled, setDisabled] = useState(false); // Disable inputs if already logged in
+  const [disabled, setDisabled] = useState(false);
   const navigate = useNavigate();
 
-  // Check if already logged in
+  // Auto-check login expiration & redirect admins immediately
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-    const loginTime = localStorage.getItem("loginTime");
 
     if (user) {
-      const now = new Date().getTime();
-      if (loginTime && now - loginTime > 10 * 60 * 1000) {
-        // 10 minutes passed → logout automatically
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        localStorage.removeItem("loginTime");
-        setDisabled(false);
+      if (user.isAdmin) {
+        navigate("/admin", { replace: true });
       } else {
-        // Still logged in → disable login inputs
-        setDisabled(true);
-
-        toast.info("You are already logged in", {
-          toastId: "already-logged-in",
-          style: { background: "#B0B0B0", color: "#000" },
-          autoClose: 5000,
-        });
+        navigate("/", { replace: true });
       }
     }
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,34 +40,50 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (disabled) return;
     if (!validateForm()) return;
 
     try {
       const res = await axios.post("/api/users/login", form);
+      const currentUser = JSON.parse(localStorage.getItem("user"));
 
-      toast.success("Login Successful!");
+      // If same user is logged in
+      if (currentUser && currentUser.username === form.username) {
+        toast.info("You are already logged in with this account", {
+          toastId: "already-logged-in",
+        });
+        setDisabled(true);
+        return;
+      }
 
-      // Save user & token to localStorage
+      // If different user → log out previous user first
+      if (currentUser && currentUser.username !== form.username) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("loginTime");
+      }
+
+      // Save new user & token
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("loginTime", new Date().getTime());
 
       setDisabled(true);
 
-      // ✅ Dispatch event to update Navbar profile photo
+      // Update Navbar profile photo
       window.dispatchEvent(
         new CustomEvent("profilePhotoUpdated", {
           detail: { profilePhoto: res.data.user.profilePhoto },
         }),
       );
 
-      // Redirect after short delay
+      toast.success("Login Successful!");
+
+      // Redirect based on role
       setTimeout(() => {
         if (res.data.user.isAdmin) {
-          navigate("/admin");
+          navigate("/admin", { replace: true });
         } else {
-          navigate("/"); // Or "/webhome" depending on your routes
+          navigate("/", { replace: true });
         }
       }, 500);
     } catch (err) {

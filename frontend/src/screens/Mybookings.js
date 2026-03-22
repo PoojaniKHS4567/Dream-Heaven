@@ -22,11 +22,11 @@ function Mybookings() {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/bookings/getbookingsbyuserid",
-        { userid: user.id },
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5000/api/bookings/getbookingsbyuserid/${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
       const bookingsWithRoomData = await Promise.all(
         response.data.map(async (booking) => {
           try {
@@ -61,7 +61,7 @@ function Mybookings() {
     if (user?.id) {
       fetchBookings();
     }
-  }, [user?.id]);
+  }, []);
 
   const handleCancelClick = (booking) => {
     const daysUntilCheckIn = moment(booking.checkindate).diff(moment(), "days");
@@ -132,12 +132,20 @@ function Mybookings() {
         accountHolder,
         bankAccount,
       };
+      const token = localStorage.getItem("token");
+      await axios.post(
+        "http://localhost:5000/api/cancellations/createcancellation",
+        cancelDetails,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
-      await axios.post("/api/cancellations/createcancellation", cancelDetails);
-
-      await axios.put(`/api/bookings/updatestatus/${selectedBooking._id}`, {
-        status: "pending",
-      });
+      await axios.put(
+        `/api/bookings/updatestatus/${selectedBooking._id}`,
+        { status: "pending" },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
       setBookings((prev) =>
         prev.map((b) =>

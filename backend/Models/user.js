@@ -32,12 +32,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    profilePhotoId: {
+      type: String,
+      default: "",
+    },
     isAdmin: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const User = mongoose.model("User", userSchema);

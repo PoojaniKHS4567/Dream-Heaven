@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
+const User = require("../Models/user");
 
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
-
   if (!token)
     return res
       .status(401)
@@ -11,8 +11,14 @@ const auth = (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "SUPER_SECRET_KEY"
+      process.env.JWT_SECRET || "SUPER_SECRET_KEY",
     );
+
+    // Check if user still exists
+    const user = await User.findById(decoded.id);
+    if (!user)
+      return res.status(401).json({ message: "User no longer exists." });
+
     req.user = decoded; // id, username, isAdmin
     next();
   } catch {

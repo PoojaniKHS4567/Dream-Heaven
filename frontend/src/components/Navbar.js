@@ -1,45 +1,44 @@
 import React, { useState, useRef, useEffect } from "react";
-import profileImg from "../assets/profile.jpeg"; // Default image
+import profileImg from "../assets/profile.jpeg";
 import logoImg from "../images/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(profileImg);
   const profileRef = useRef();
+  const navigate = useNavigate();
 
-  // Get the current path
   const currentPath = window.location.pathname;
 
   useEffect(() => {
-    // Check if user is logged in
     const userData = JSON.parse(localStorage.getItem("user"));
 
     if (userData) {
-      // Use user's profile photo if it exists, otherwise default
+      if (userData && userData.isAdmin) {
+        navigate("/admin");
+        return;
+      }
+
       setProfilePhoto(userData.profilePhoto || profileImg);
     } else {
-      // If no user is logged in, always show default
       setProfilePhoto(profileImg);
     }
 
-    // Listen for profile photo updates
     const handleProfilePhotoUpdate = (event) => {
       setProfilePhoto(event.detail.profilePhoto || profileImg);
     };
 
     window.addEventListener("profilePhotoUpdated", handleProfilePhotoUpdate);
-
     return () => {
       window.removeEventListener(
         "profilePhotoUpdated",
         handleProfilePhotoUpdate,
       );
     };
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
-    // Close dropdown if click outside
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setDropdownOpen(false);
@@ -55,13 +54,14 @@ function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    setProfilePhoto(profileImg); // Reset to default image
-    window.location.href = "/";
+    localStorage.removeItem("token");
+    setProfilePhoto(profileImg);
+    navigate("/login");
   };
 
   return (
     <div className="navbar-wrapper">
-      {/* Upper Section */}
+      {/* Upper Navbar */}
       <nav className="navbar upper-navbar">
         <div className="container-fluid d-flex justify-content-end align-items-center position-relative">
           <Link to="/register" className="btn btn-light m-2">
@@ -71,7 +71,6 @@ function Navbar() {
             Log In
           </Link>
 
-          {/* Profile Icon with Dropdown */}
           <div
             ref={profileRef}
             className="profile-icon position-relative"
@@ -108,10 +107,9 @@ function Navbar() {
         </div>
       </nav>
 
-      {/* Lower Section */}
+      {/* Lower Navbar */}
       <nav className="navbar lower-navbar">
         <div className="container-fluid d-flex justify-content-between align-items-center">
-          {/* Logo */}
           <Link
             className="navbar-brand d-flex align-items-center"
             to="/webhome"
@@ -124,33 +122,26 @@ function Navbar() {
             <span className="navbar-brand">Dream Heaven</span>
           </Link>
 
-          {/* Navigation Links */}
           <ul className="navbar-nav mx-auto d-flex flex-row">
             <li className="nav-item">
               <Link
-                className={`nav-link ${
-                  currentPath === "/webhome" ? "active-link" : ""
-                }`}
-                to="/webhome"
+                className={`nav-link ${currentPath === "/" ? "active-link" : ""}`}
+                to="/home"
               >
                 Home
               </Link>
             </li>
             <li className="nav-item">
               <Link
-                className={`nav-link ${
-                  currentPath === "/home" ? "active-link" : ""
-                }`}
-                to="/home"
+                className={`nav-link ${currentPath === "/rooms" ? "active-link" : ""}`}
+                to="/rooms"
               >
                 Rooms & Reservations
               </Link>
             </li>
             <li className="nav-item">
               <Link
-                className={`nav-link ${
-                  currentPath === "/feedback" ? "active-link" : ""
-                }`}
+                className={`nav-link ${currentPath === "/feedback" ? "active-link" : ""}`}
                 to="/feedback"
               >
                 Feedback
@@ -158,9 +149,7 @@ function Navbar() {
             </li>
             <li className="nav-item">
               <Link
-                className={`nav-link ${
-                  currentPath === "/aboutus" ? "active-link" : ""
-                }`}
+                className={`nav-link ${currentPath === "/aboutus" ? "active-link" : ""}`}
                 to="/aboutus"
               >
                 About Us
@@ -168,9 +157,7 @@ function Navbar() {
             </li>
             <li className="nav-item">
               <Link
-                className={`nav-link ${
-                  currentPath === "/contactus" ? "active-link" : ""
-                }`}
+                className={`nav-link ${currentPath === "/contactus" ? "active-link" : ""}`}
                 to="/contactus"
               >
                 Contact Us
